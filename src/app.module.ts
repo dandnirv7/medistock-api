@@ -9,6 +9,7 @@ import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { MedicinesModule } from './medicines/medicines.module';
+import { ReportsModule } from './reports/reports.module';
 import { StockMovementsModule } from './stock-movements/stock-movements.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 
@@ -50,6 +51,7 @@ const throttlerConfig = (() => {
     SuppliersModule,
     MedicinesModule,
     StockMovementsModule,
+    ReportsModule,
     DashboardModule,
   ],
   providers: [

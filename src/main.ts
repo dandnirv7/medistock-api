@@ -36,12 +36,26 @@ async function bootstrap(): Promise<void> {
     res.status(200).json({ status: 'ok' });
   });
 
-  // CORS — open for Flutter dev (Android emulator uses 10.0.2.2 and
-  // also http://localhost:* during web/desktop smoke tests).
-  app.enableCors({
-    origin: true,
-    credentials: true,
-  });
+  // CORS allowlist. Origins are read from CORS_ORIGINS (comma-separated).
+  // - production: strict — only the listed origins are accepted.
+  // - development: permissive default (echoes the request Origin) so
+  //   Flutter on the Android emulator (10.0.2.2), web/desktop smoke
+  //   tests on http://localhost:*, and any new dev URL just work.
+  //   Override with CORS_ORIGINS to lock it down locally if needed.
+  // The shape stays array-or-true so credentials: true remains safe:
+  // echoing the Origin (true) is fine without cookies; an explicit
+  // allowlist prevents accidental cross-origin cookie leaks.
+  const isProd = process.env.NODE_ENV === 'production';
+  const corsOrigins = process.env.CORS_ORIGINS;
+  if (corsOrigins) {
+    const allow = corsOrigins
+      .split(',')
+      .map((o) => o.trim())
+      .filter(Boolean);
+    app.enableCors({ origin: allow, credentials: true });
+  } else {
+    app.enableCors({ origin: !isProd, credentials: true });
+  }
 
   // Global validation (whitelist strips unknown fields, transform
   // converts payloads to DTO instances so DTO defaults work).

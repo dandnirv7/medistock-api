@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { UserItemDto } from './user-item.dto';
+
 export class LoginUserDto {
   @ApiProperty({ format: 'uuid' })
   id!: string;
@@ -25,22 +27,7 @@ export class LoginResultDto {
   user!: LoginUserDto;
 }
 
-export class MeResponseDto {
-  @ApiProperty({ format: 'uuid' })
-  id!: string;
-
-  @ApiProperty({ example: 'Admin Apotek' })
-  name!: string;
-
-  @ApiProperty({ example: 'admin' })
-  username!: string;
-
-  @ApiProperty({ nullable: true, example: 'admin@medistock.local' })
-  email!: string | null;
-
-  @ApiProperty({ enum: ['ADMIN', 'STAFF'] })
-  role!: 'ADMIN' | 'STAFF';
-}
+export class MeResponseDto extends UserItemDto {}
 
 export class LogoutResponseDto {
   @ApiProperty({ example: 'Logout berhasil' })

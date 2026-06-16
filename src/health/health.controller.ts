@@ -1,4 +1,5 @@
 import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import {
   ApiOkResponse,
   ApiOperation,
@@ -31,6 +32,10 @@ class HealthPayload {
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Uptime monitors and load balancers may poll /api/v1/health every
+  // few seconds. The global 60/min prod throttler would trip within
+  // an hour, so health probes are exempt.
+  @SkipThrottle()
   @Get()
   @ApiOperation({ summary: 'Liveness + DB readiness probe' })
   @ApiOkResponse({ type: EnvelopeDto<HealthPayload> })

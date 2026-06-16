@@ -1,0 +1,9 @@
+#!/bin/sh
+# Conventional Commits subject validator.
+subject=$(head -1 "$1")
+if ! echo "$subject" | grep -qE '^(feat|fix|refactor|test|docs|chore|style|perf)\([a-z0-9_-]+\): .+'; then
+  echo "commit-msg hook: subject must match Conventional Commits"
+  echo "  got:      $subject"
+  echo "  expected: <type>(<scope>): <subject>"
+  exit 1
+fi

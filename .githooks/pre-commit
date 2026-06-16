@@ -1,0 +1,8 @@
+#!/bin/sh
+# Backend pre-commit gate per AGENTS.md 'Pre-Commit Verification'.
+cd /home/shiver/Documents/Development/Fullstack/MediStock/medistock-api
+echo "[pre-commit] running lint..."
+pnpm run lint || { echo "[pre-commit] lint failed — commit aborted"; exit 1; }
+echo "[pre-commit] running unit tests..."
+pnpm run test || { echo "[pre-commit] tests failed — commit aborted"; exit 1; }
+echo "[pre-commit] OK"

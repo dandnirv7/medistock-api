@@ -7,9 +7,18 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { Roles } from '../common/decorators/roles.decorator';
 import {
+  BadRequestResponseDto,
+  ForbiddenResponseDto,
+  NotFoundResponseDto,
+  UnauthorizedResponseDto,
+} from '../common/dto/error-responses.dto';
+import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -21,10 +30,14 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { EnvelopeDto } from '../common/dto/envelope.dto';
 import { PageDto } from '../common/dto/page.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 import type { AuthenticatedUser } from '../common/types/auth-user.type';
 import { StockInDto } from './dto/stock-in.dto';
 import { StockMovementItemDto } from './dto/stock-movement-item.dto';
 import { StockMovementQueryDto } from './dto/stock-movement-query.dto';
+import { StockOpnameBulkDto } from './dto/stock-opname-bulk.dto';
+import { StockOpnameBulkResultDto } from './dto/stock-opname-bulk-result.dto';
+import { StockOpnameDto } from './dto/stock-opname.dto';
 import { StockOutDto } from './dto/stock-out.dto';
 import {
   StockMovementItem,
@@ -75,5 +88,49 @@ export class StockMovementsController {
     @CurrentUser() user: AuthenticatedUser,
   ): ReturnType<StockMovementsService['stockOut']> {
     return this.service.stockOut(dto, user.id);
+  }
+
+  @Post('opname')
+  @HttpCode(201)
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  @ApiOperation({
+    summary: 'Record stock opname (ADMIN only). Sets absolute stock level.',
+  })
+  @ApiCreatedResponse({ type: EnvelopeDto<StockMovementItemDto> })
+  @ApiNotFoundResponse({ type: NotFoundResponseDto })
+  @ApiBadRequestResponse({
+    description: 'newStock matches currentStock (no-op) or invalid',
+    type: BadRequestResponseDto,
+  })
+  @ApiUnauthorizedResponse({ type: UnauthorizedResponseDto })
+  @ApiForbiddenResponse({ type: ForbiddenResponseDto })
+  opname(
+    @Body() dto: StockOpnameDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): ReturnType<StockMovementsService['opname']> {
+    return this.service.opname(dto, user.id);
+  }
+
+  @Post('opname/bulk')
+  @HttpCode(200)
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  @ApiOperation({
+    summary:
+      'Bulk stock opname (ADMIN only). Per-item status, partial success.',
+  })
+  @ApiOkResponse({ type: EnvelopeDto<StockOpnameBulkResultDto> })
+  @ApiBadRequestResponse({
+    description: 'items empty, too long (>500), or any item invalid',
+    type: BadRequestResponseDto,
+  })
+  @ApiUnauthorizedResponse({ type: UnauthorizedResponseDto })
+  @ApiForbiddenResponse({ type: ForbiddenResponseDto })
+  opnameBulk(
+    @Body() dto: StockOpnameBulkDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): ReturnType<StockMovementsService['opnameBulk']> {
+    return this.service.opnameBulk(dto, user.id);
   }
 }

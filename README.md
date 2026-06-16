@@ -1,98 +1,199 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# MediStock API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS + Prisma + PostgreSQL backend for the MediStock pharmacy inventory
+app. Powers the Flutter Android client (see `medistock_mobile/`) and
+exposes a REST API for managing users, medicines, categories, suppliers,
+stock movements, and CSV reports.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- **Stack**: NestJS 11 (TypeScript), Prisma 6, PostgreSQL, JWT auth
+- **Status**: MVP (Fase 1 API complete — 35 endpoints, 55 unit + 85 e2e tests)
+- **License**: UNLICENSED (private)
 
-## Description
+## Prerequisites
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- Node.js ≥ 20
+- pnpm ≥ 9
+- PostgreSQL ≥ 14 (running locally or reachable via `DATABASE_URL`)
 
-## Project setup
+## Quick Start
 
 ```bash
-$ pnpm install
+# 1. Copy the env template and edit DATABASE_URL + JWT_SECRET
+cp .env.example .env
+
+# 2. Install deps
+pnpm install
+
+# 3. Apply migrations and seed demo data
+pnpm prisma migrate dev
+pnpm prisma db seed
+
+# 4. Run in watch mode
+pnpm run start:dev
+
+# 5. Smoke test
+curl http://localhost:3000/api/v1/health
+# → { "success": true, "data": { "status": "ok", "database": "up", ... } }
 ```
 
-## Compile and run the project
+A second, bare probe lives at `GET /health` (no `/api/v1` prefix) for
+uptime monitors that prefer minimal-path liveness.
+
+## Demo Credentials (seeded)
+
+| Role  | Username                  | Password    |
+| ----- | ------------------------- | ----------- |
+| ADMIN | `admin@medistock.local`   | `admin123`  |
+| STAFF | `staff@medistock.local`   | `staff123`  |
+
+Login with `POST /api/v1/auth/login` to get a JWT.
+
+## Environment Variables
+
+| Variable          | Required | Default                              | Notes                                                                                  |
+| ----------------- | -------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
+| `DATABASE_URL`    | Yes      | —                                    | PostgreSQL connection string. Used by Prisma CLI and the runtime driver adapter.       |
+| `JWT_SECRET`      | Yes      | —                                    | **Min 32 characters in production** (enforced at boot). Generate with `openssl rand -base64 32`. |
+| `JWT_EXPIRES_IN`  | No       | `1d`                                 | Token TTL.                                                                             |
+| `PORT`            | No       | `3000`                               | HTTP port.                                                                             |
+| `NODE_ENV`        | No       | `development`                        | Set to `production` in prod to enable strict guards.                                  |
+| `CORS_ORIGINS`    | No       | (unset in dev = echo Origin)         | Comma-separated allowlist for production.                                             |
+| `SWAGGER_ENABLED` | No       | `1` in dev, `0` in prod              | `1` to serve Swagger UI at `/api/docs`.                                                |
+
+See `.env.example` for the full template.
+
+## Scripts
+
+| Command                | Purpose                                                |
+| ---------------------- | ------------------------------------------------------ |
+| `pnpm run start`       | Run once (no watch)                                    |
+| `pnpm run start:dev`   | Watch mode (recommended for local dev)                 |
+| `pnpm run start:prod`  | Run compiled `dist/main` (requires `pnpm run build`)   |
+| `pnpm run build`       | Compile TypeScript to `dist/`                          |
+| `pnpm run lint`        | ESLint with auto-fix                                   |
+| `pnpm run format`      | Prettier write                                         |
+| `pnpm test`            | Jest unit tests (one file per service/controller)      |
+| `pnpm run test:cov`    | Unit tests with coverage report                        |
+| `pnpm test:e2e`        | Jest e2e tests (full HTTP via supertest)               |
+| `pnpm run db:seed`     | Re-run `prisma/seed.ts` (idempotent)                   |
+| `pnpm run db:reset`    | Drop, migrate, and seed (DESTRUCTIVE)                  |
+| `pnpm prisma migrate dev` | Create + apply a new migration during development  |
+| `pnpm prisma studio`   | Open Prisma's web DB inspector                         |
+
+## API Endpoints
+
+All endpoints are under the `/api/v1` prefix. Auth is `Bearer <token>`
+unless marked **Public**. See the [API contract](docs/contracts/api_contract.md)
+for full request/response shapes and Section 11 acceptance criteria.
+
+| Method | Path                                | Auth   | Purpose                     |
+| ------ | ----------------------------------- | ------ | --------------------------- |
+| POST   | `/auth/login`                       | Public | Login, returns JWT          |
+| GET    | `/auth/me`                          | Bearer | Current user profile        |
+| POST   | `/auth/logout`                      | Bearer | Logout (client-side discard) |
+| GET    | `/dashboard/summary`                | Bearer | Home screen counters        |
+| GET    | `/categories`                       | Bearer | List categories             |
+| GET    | `/categories/:id`                   | Bearer | Category detail             |
+| POST   | `/categories`                       | Bearer | Create category (ADMIN)     |
+| PATCH  | `/categories/:id`                   | Bearer | Update category (ADMIN)     |
+| DELETE | `/categories/:id`                   | Bearer | Delete category (ADMIN)     |
+| GET    | `/suppliers`                        | Bearer | List suppliers              |
+| GET    | `/suppliers/:id`                    | Bearer | Supplier detail             |
+| POST   | `/suppliers`                        | Bearer | Create supplier (ADMIN)     |
+| PATCH  | `/suppliers/:id`                    | Bearer | Update supplier (ADMIN)     |
+| DELETE | `/suppliers/:id`                    | Bearer | Delete supplier (ADMIN)     |
+| GET    | `/medicines`                        | Bearer | List medicines              |
+| GET    | `/medicines/:id`                    | Bearer | Medicine detail             |
+| POST   | `/medicines`                        | Bearer | Create medicine (ADMIN)     |
+| PATCH  | `/medicines/:id`                    | Bearer | Update medicine (ADMIN)     |
+| DELETE | `/medicines/:id`                    | Bearer | Delete medicine (ADMIN)     |
+| GET    | `/users`                            | Bearer | List users (ADMIN)          |
+| GET    | `/users/me`                         | Bearer | Current user (self)         |
+| POST   | `/users`                            | Bearer | Create user (ADMIN)         |
+| PATCH  | `/users/:id`                        | Bearer | Update user (ADMIN)         |
+| DELETE | `/users/:id`                        | Bearer | Delete user (ADMIN)         |
+| PATCH  | `/users/me`                         | Bearer | Update own profile          |
+| PATCH  | `/users/me/password`                | Bearer | Change own password         |
+| GET    | `/stock-movements`                  | Bearer | List stock movements        |
+| POST   | `/stock-movements/in`               | Bearer | Stock in (purchase/return)  |
+| POST   | `/stock-movements/out`              | Bearer | Stock out (sale/damage)     |
+| POST   | `/stock-movements/opname`           | Bearer | Set absolute stock (ADMIN)  |
+| POST   | `/stock-movements/opname/bulk`      | Bearer | Bulk opname 1–500 (ADMIN)   |
+| GET    | `/reports/stock-movements.csv`      | Bearer | CSV export (ADMIN)          |
+| GET    | `/reports/low-stock.csv`            | Bearer | CSV low-stock (ADMIN)       |
+| GET    | `/reports/expired-soon.csv`         | Bearer | CSV expired-soon (ADMIN)    |
+| GET    | `/health`                           | Public | DB-aware liveness probe     |
+
+**Live API docs** (dev mode only): `http://localhost:3000/api/docs`.
+
+## Response Envelope
+
+All success responses are wrapped:
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": { ... },
+  "meta": { "page": 1, "limit": 10, "total": 42 }
+}
+```
+
+Error responses:
+
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "error": { "code": "VALIDATION_ERROR", "details": [...] },
+  "path": "/api/v1/auth/login"
+}
+```
+
+## Project Structure
+
+```
+medistock-api/
+├── prisma/                  Schema, migrations, seed
+├── src/
+│   ├── auth/                Login, JWT, /auth/me, /auth/logout
+│   ├── users/               User CRUD + self-service profile
+│   ├── categories/          Category CRUD
+│   ├── suppliers/           Supplier CRUD
+│   ├── medicines/           Medicine CRUD with derived stockStatus / expiredStatus
+│   ├── stock-movements/     Stock in/out/opname/bulk
+│   ├── reports/             CSV exports
+│   ├── dashboard/           Home summary endpoint
+│   ├── health/              DB-aware liveness probe
+│   ├── common/              Cross-cutting: guards, filters, interceptors, DTOs
+│   └── database/            PrismaService (PrismaPg driver adapter)
+├── test/                    E2E tests (one file per feature)
+└── docs/contracts/          Synced from medistock-docs: API contract, PRD, schema, structure
+```
+
+See `docs/contracts/folder_structure.md` for the canonical layout.
+
+## Testing
+
+- **Unit tests** (`src/**/*.spec.ts`) — service + controller, mocked Prisma. `pnpm test`.
+- **E2E tests** (`test/*.e2e-spec.ts`) — full HTTP via supertest, real Postgres. `pnpm test:e2e`.
+- **Coverage** is qualitative (no minimum target for MVP). `pnpm run test:cov`.
+
+Both gates are enforced by the local pre-commit hook (`.githooks/`):
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+# Activate once per clone:
+git config core.hooksPath .githooks
 ```
 
-## Run tests
+The hook runs `pnpm lint && pnpm test` and rejects commits whose
+subject doesn't match Conventional Commits.
 
-```bash
-# unit tests
-$ pnpm run test
+## Related Documentation
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- [API contract](docs/contracts/api_contract.md) — request/response shapes, error format, permission matrix
+- [PRD](docs/contracts/prd.md) — product scope and user flows
+- [Database schema (MVP)](docs/contracts/database_schema_mvp.md) — tables and columns
+- [Folder structure](docs/contracts/folder_structure.md) — backend + mobile layout
+- [Root AGENTS.md](../AGENTS.md) — code style, anti-patterns, Definition of Done
+- [Orchestration plan](../.planning/ORCHESTRATION.md) — poly-repo workflow & phases

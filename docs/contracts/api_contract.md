@@ -1261,26 +1261,21 @@ Endpoint berikut tidak boleh dibuat pada MVP demo:
 /auth/register
 /auth/forgot-password
 /auth/reset-password
-/users
 /medicine-batches
 /purchase-orders
 /purchase-order-items
 /sales
 /sale-items
-/stock-opnames
 /audit-logs
 /notifications
 /settings
-/reports
 /barcodes
 /uploads
 /payments
 /exports/pdf
-/exports/excel
 ```
 
 Fitur berikut juga out of scope:
-
 1. Register user dari mobile.
 2. Forgot password.
 3. Upload foto obat.
@@ -1289,11 +1284,9 @@ Fitur berikut juga out of scope:
 6. FEFO.
 7. Purchase order.
 8. Sales/kasir lengkap.
-9. Stock opname.
 10. Audit log.
 11. Notification push.
 12. App settings dynamic.
-13. Report generator.
 14. Export PDF.
 15. Export Excel.
 16. Payment gateway.
@@ -1301,7 +1294,6 @@ Fitur berikut juga out of scope:
 18. Offline sync.
 19. WebSocket.
 20. Realtime dashboard.
-
 ---
 
 # 10. Endpoint Summary
@@ -1327,6 +1319,30 @@ Fitur berikut juga out of scope:
 | POST   | /medicines           | Create medicine      | Bearer |
 | PATCH  | /medicines/:id       | Update medicine      | Bearer |
 | DELETE | /medicines/:id       | Delete medicine      | Bearer |
+| GET    | /users                           | List users           | Bearer |
+| GET    | /users/me                        | Current user         | Bearer |
+| POST   | /users                           | Create user          | Bearer |
+| PATCH  | /users/:id                       | Update user          | Bearer |
+| DELETE | /users/:id                       | Delete user          | Bearer |
+| PATCH  | /users/me                        | Update own profile   | Bearer |
+| PATCH  | /users/me/password               | Change own password  | Bearer |
+| POST   | /stock-movements/opname          | Set absolute stock   | Bearer |
+| POST   | /stock-movements/opname/bulk     | Bulk opname (1-500)  | Bearer |
+| GET    | /reports/stock-movements.csv     | CSV stock movements  | Bearer |
+| GET    | /reports/low-stock.csv           | CSV low stock        | Bearer |
+| GET    | /reports/expired-soon.csv        | CSV expired soon     | Bearer |
+| GET    | /users                           | List users           | Bearer |
+| GET    | /users/me                        | Current user         | Bearer |
+| POST   | /users                           | Create user          | Bearer |
+| PATCH  | /users/:id                       | Update user          | Bearer |
+| DELETE | /users/:id                       | Delete user          | Bearer |
+| PATCH  | /users/me                        | Update own profile   | Bearer |
+| PATCH  | /users/me/password               | Change own password  | Bearer |
+| POST   | /stock-movements/opname          | Set absolute stock   | Bearer |
+| POST   | /stock-movements/opname/bulk     | Bulk opname (1-500)  | Bearer |
+| GET    | /reports/stock-movements.csv     | CSV stock movements  | Bearer |
+| GET    | /reports/low-stock.csv           | CSV low stock        | Bearer |
+| GET    | /reports/expired-soon.csv        | CSV expired soon     | Bearer |
 | GET    | /stock-movements     | List stock movements | Bearer |
 | POST   | /stock-movements/in  | Create stock in      | Bearer |
 | POST   | /stock-movements/out | Create stock out     | Bearer |
@@ -1334,7 +1350,7 @@ Fitur berikut juga out of scope:
 Total endpoint MVP:
 
 ```txt
-23 endpoints
+35 endpoints
 ```
 
 ---
@@ -1371,6 +1387,7 @@ API dianggap selesai jika:
 Backend module yang dibuat:
 
 ```txt
+users
 auth
 dashboard
 categories
@@ -1379,21 +1396,18 @@ medicines
 stock-movements
 prisma
 common
+reports
 ```
 
 Module yang tidak dibuat untuk MVP:
 
 ```txt
-users
 medicine-batches
 purchase-orders
 sales
-stock-opnames
 audit-logs
 notifications
 settings
-reports
-exports
 uploads
 payments
 ```

@@ -27,6 +27,7 @@ export interface ExpiredSoonMedicine {
 export interface DashboardSummary {
   totalMedicines: number;
   totalStock: number;
+  totalValue: number;
   totalCategories: number;
   totalSuppliers: number;
   lowStockCount: number;
@@ -51,6 +52,7 @@ export class DashboardService {
     const [
       totalMedicines,
       totalStockAggregate,
+      totalValueAggregate,
       totalCategories,
       totalSuppliers,
       allMedicines,
@@ -60,6 +62,13 @@ export class DashboardService {
         _sum: { currentStock: true },
         where: { isActive: true },
       }),
+      // totalValue = sum(purchasePrice * currentStock) for active medicines.
+      // Prisma has no product aggregate, so we use $queryRaw with COALESCE.
+      this.prisma.$queryRaw<Array<{ total: number | null }>>`
+        SELECT COALESCE(SUM("purchase_price" * "current_stock"), 0)::float AS total
+        FROM medicines
+        WHERE "is_active" = true
+      `,
       this.prisma.category.count({ where: { isActive: true } }),
       this.prisma.supplier.count({ where: { isActive: true } }),
       this.prisma.medicine.findMany({
@@ -112,6 +121,7 @@ export class DashboardService {
     return {
       totalMedicines,
       totalStock: totalStockAggregate._sum.currentStock ?? 0,
+      totalValue: Number(totalValueAggregate[0]?.total ?? 0),
       totalCategories,
       totalSuppliers,
       lowStockCount: lowStock.length,

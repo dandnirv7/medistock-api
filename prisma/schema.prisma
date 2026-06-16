@@ -1,0 +1,137 @@
+// MediStock — Prisma schema (MVP)
+// Source of truth: docs/database_schema_mvp.md
+// Scope: ONLY users, categories, suppliers, medicines, stock_movements.
+// Batch, PO, Sales, Stock Opname, Audit Trail, etc. are explicitly OUT of MVP scope.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Enums -----------------------------------------------------------------
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+enum StockMovementType {
+  IN
+  OUT
+}
+
+enum StockMovementReason {
+  PURCHASE
+  SALE
+  DAMAGED
+  EXPIRED
+  LOST
+  ADJUSTMENT
+  OTHER
+}
+
+// --- Models ----------------------------------------------------------------
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(100)
+  username  String   @unique @db.VarChar(50)
+  email     String?  @db.VarChar(150)
+  password  String   @db.VarChar(255)
+  role      UserRole
+  isActive  Boolean  @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  stockMovements StockMovement[] @relation("UserStockMovements")
+
+  @@map("users")
+}
+
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  medicines Medicine[]
+
+  @@map("categories")
+}
+
+model Supplier {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(150)
+  phone     String?  @db.VarChar(30)
+  email     String?  @db.VarChar(150)
+  address   String?  @db.Text
+  notes     String?  @db.Text
+  isActive  Boolean  @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  medicines      Medicine[]
+  stockMovements StockMovement[]
+
+  @@map("suppliers")
+}
+
+model Medicine {
+  id            String   @id @default(uuid()) @db.Uuid
+  code          String   @unique @db.VarChar(50)
+  name          String   @db.VarChar(150)
+  categoryId    String   @map("category_id") @db.Uuid
+  supplierId    String   @map("supplier_id") @db.Uuid
+  unit          String   @db.VarChar(50)
+  purchasePrice Decimal  @map("purchase_price") @db.Decimal(12, 2)
+  sellingPrice  Decimal  @map("selling_price") @db.Decimal(12, 2)
+  currentStock  Int      @default(0) @map("current_stock")
+  minimumStock  Int      @default(0) @map("minimum_stock")
+  expiredDate   DateTime @map("expired_date") @db.Date
+  description   String?  @db.Text
+  isActive      Boolean  @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  category       Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  supplier       Supplier        @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  stockMovements StockMovement[]
+
+  @@index([categoryId])
+  @@index([supplierId])
+  @@index([name])
+  @@map("medicines")
+}
+
+model StockMovement {
+  id              String              @id @default(uuid()) @db.Uuid
+  medicineId      String              @map("medicine_id") @db.Uuid
+  userId          String              @map("user_id") @db.Uuid
+  supplierId      String?             @map("supplier_id") @db.Uuid
+  type            StockMovementType
+  reason          StockMovementReason
+  quantity        Int
+  stockBefore     Int                 @map("stock_before")
+  stockAfter      Int                 @map("stock_after")
+  transactionDate DateTime            @map("transaction_date") @db.Date
+  notes           String?             @db.Text
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  medicine Medicine  @relation(fields: [medicineId], references: [id], onDelete: Restrict)
+  user     User      @relation("UserStockMovements", fields: [userId], references: [id], onDelete: Restrict)
+  supplier Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  @@index([medicineId])
+  @@index([userId])
+  @@index([supplierId])
+  @@index([transactionDate])
+  @@index([type])
+  @@map("stock_movements")
+}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { INestApplication } from '@nestjs/common';
 import type { Server } from 'http';
 import request from 'supertest';
@@ -17,13 +18,17 @@ describe('Health & wiring (e2e)', () => {
     await app.close();
   });
 
-  it('GET /api/v1/health returns the wrapped envelope (public route)', async () => {
+  it('GET /api/v1/health returns the wrapped envelope with DB status', async () => {
     const res = await request(server).get('/api/v1/health');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({
+    expect(res.body).toMatchObject({
       success: true,
       message: 'Success',
-      data: { status: 'ok' },
+      data: {
+        status: 'ok',
+        database: 'up',
+        uptime: expect.any(Number),
+      },
     });
   });
 

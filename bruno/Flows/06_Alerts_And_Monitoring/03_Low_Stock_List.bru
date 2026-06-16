@@ -1,0 +1,41 @@
+meta {
+  name: 03. Low Stock Medicines List
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/medicines?lowStock=true&sortBy=currentStock&sortOrder=asc&limit=50
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  lowStock: true
+  sortBy: currentStock
+  sortOrder: asc
+  limit: 50
+}
+
+docs {
+  List semua obat dengan stok rendah. Sorted by currentStock ascending
+  sehingga yang paling urgent muncul di atas.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data is array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+  test("all items have stockStatus LOW_STOCK", function() {
+    res.body.data.forEach(function(m) {
+      expect(m.stockStatus).to.equal("LOW_STOCK");
+    });
+  });
+}

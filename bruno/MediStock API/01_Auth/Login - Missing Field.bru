@@ -1,0 +1,34 @@
+meta {
+  name: Login - Missing Field
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "username": "admin"
+  }
+}
+
+docs {
+  Negative case: field `password` kosong harus return 422 VALIDATION_ERROR.
+}
+
+tests {
+  test("status is 422", function() {
+    expect(res.status).to.equal(422);
+  });
+  test("error.code is VALIDATION_ERROR", function() {
+    expect(res.body.error.code).to.equal("VALIDATION_ERROR");
+  });
+}

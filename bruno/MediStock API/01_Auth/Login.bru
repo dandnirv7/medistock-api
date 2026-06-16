@@ -1,0 +1,50 @@
+meta {
+  name: Login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "username": "{{adminUsername}}",
+    "password": "{{adminPassword}}"
+  }
+}
+
+docs {
+  Login dengan kredensial admin (default dari env: admin/admin123).
+  Response berisi `accessToken` yang otomatis disimpan ke env var `token`
+  via script di bawah, sehingga request protected berikutnya bisa pakai
+  `Authorization: Bearer {{token}}`.
+}
+
+script:post-response {
+  if (res.status === 200 && res.body?.data?.accessToken) {
+    bru.setEnvVar("token", res.body.data.accessToken);
+  }
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("response success is true", function() {
+    expect(res.body.success).to.equal(true);
+  });
+  test("accessToken is present", function() {
+    expect(res.body.data.accessToken).to.be.a("string").and.not.empty;
+  });
+  test("user.role is ADMIN or STAFF", function() {
+    expect(["ADMIN", "STAFF"]).to.include(res.body.data.user.role);
+  });
+}

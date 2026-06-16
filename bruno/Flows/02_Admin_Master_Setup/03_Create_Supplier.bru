@@ -1,0 +1,44 @@
+meta {
+  name: 03. Create Supplier
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/suppliers
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "PT Kimia Farma Tbk",
+    "phone": "081234567890",
+    "email": "supplier@example.com",
+    "address": "Jakarta",
+    "notes": "Supplier utama"
+  }
+}
+
+script:post-response {
+  if (res.status === 201 && res.body?.data?.id) {
+    bru.setEnvVar("testSupplierId", res.body.data.id);
+  }
+}
+
+tests {
+  test("status is 201", function() {
+    expect(res.status).to.equal(201);
+  });
+  test("supplierId saved", function() {
+    expect(bru.getEnvVar("testSupplierId")).to.match(/^[0-9a-f-]{36}$/);
+  });
+}

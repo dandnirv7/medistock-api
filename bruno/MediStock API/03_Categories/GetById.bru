@@ -1,0 +1,32 @@
+meta {
+  name: GetById
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/categories/{{testCategoryId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Ambil detail kategori by ID. Set `{{testCategoryId}}` di env (hasil Create)
+  atau ganti path manual dengan UUID dari response List/Create.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data.id matches", function() {
+    expect(res.body.data.id).to.equal(bru.getEnvVar("testCategoryId"));
+  });
+  test("data has name", function() {
+    expect(res.body.data.name).to.be.a("string");
+  });
+}

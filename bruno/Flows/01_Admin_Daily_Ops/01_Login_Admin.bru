@@ -1,0 +1,42 @@
+meta {
+  name: 01. Login Admin
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "username": "{{adminUsername}}",
+    "password": "{{adminPassword}}"
+  }
+}
+
+docs {
+  Step 1: Admin login di awal hari. Token auto-saved ke env `token`
+  untuk request berikutnya di flow ini.
+}
+
+script:post-response {
+  if (res.status === 200 && res.body?.data?.accessToken) {
+    bru.setEnvVar("token", res.body.data.accessToken);
+  }
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("token saved", function() {
+    expect(bru.getEnvVar("token")).to.be.a("string").and.not.empty;
+  });
+}

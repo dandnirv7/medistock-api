@@ -1,0 +1,46 @@
+meta {
+  name: Create - Invalid Category
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/medicines
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "code": "TEST-X1",
+    "name": "Test Invalid Category",
+    "categoryId": "00000000-0000-0000-0000-000000000000",
+    "unit": "Tablet",
+    "purchasePrice": 100,
+    "sellingPrice": 200,
+    "minimumStock": 5
+  }
+}
+
+docs {
+  Negative case: categoryId yang tidak exist harus 422 VALIDATION_ERROR
+  atau 404 NOT_FOUND (tergantung implementasi validator). Test yang
+  relevan: bukan 201.
+}
+
+tests {
+  test("status is not 201", function() {
+    expect(res.status).to.not.equal(201);
+  });
+  test("error.code is validation-related", function() {
+    expect(["VALIDATION_ERROR", "NOT_FOUND"]).to.include(res.body.error.code);
+  });
+}

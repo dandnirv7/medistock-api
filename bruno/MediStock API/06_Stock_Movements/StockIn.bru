@@ -1,0 +1,52 @@
+meta {
+  name: StockIn
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/stock-movements/in
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "medicineId": "{{testMedicineId}}",
+    "supplierId": "{{testSupplierId}}",
+    "quantity": 50,
+    "transactionDate": "2026-06-16",
+    "notes": "Pembelian rutin"
+  }
+}
+
+docs {
+  Catat stok masuk. Reason otomatis PURCHASE, type otomatis IN.
+  medicineId & supplierId di-set via env var dari flow Create sebelumnya.
+  Admin & Staff boleh akses endpoint ini.
+}
+
+tests {
+  test("status is 201", function() {
+    expect(res.status).to.equal(201);
+  });
+  test("type is IN", function() {
+    expect(res.body.data.type).to.equal("IN");
+  });
+  test("reason is PURCHASE", function() {
+    expect(res.body.data.reason).to.equal("PURCHASE");
+  });
+  test("stockAfter = stockBefore + quantity", function() {
+    expect(res.body.data.stockAfter).to.equal(
+      res.body.data.stockBefore + res.body.data.quantity
+    );
+  });
+}

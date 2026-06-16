@@ -1,0 +1,28 @@
+meta {
+  name: 04. Get My Profile
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/auth/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Step 4: Konfirmasi session masih hidup & role sesuai.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("user.role is ADMIN", function() {
+    expect(res.body.data.role).to.equal("ADMIN");
+  });
+}

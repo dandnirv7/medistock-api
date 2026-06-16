@@ -1,0 +1,50 @@
+meta {
+  name: 05. Stock Out - Insufficient (NEGATIVE)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/stock-movements/out
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "medicineId": "{{testMedicineId}}",
+    "quantity": 99999,
+    "reason": "SALE",
+    "transactionDate": "2026-06-16",
+    "notes": "Test negative case"
+  }
+}
+
+docs {
+  NEGATIVE CASE: minta qty lebih besar dari stok. Expected 409
+  INSUFFICIENT_STOCK dengan details { availableStock, requestedQuantity }.
+  Penting untuk memastikan validasi business rule berjalan.
+}
+
+tests {
+  test("status is 409", function() {
+    expect(res.status).to.equal(409);
+  });
+  test("error.code is INSUFFICIENT_STOCK", function() {
+    expect(res.body.error.code).to.equal("INSUFFICIENT_STOCK");
+  });
+  test("error.details.availableStock is number", function() {
+    expect(res.body.error.details.availableStock).to.be.a("number");
+  });
+  test("error.details.requestedQuantity is 99999", function() {
+    expect(res.body.error.details.requestedQuantity).to.equal(99999);
+  });
+}

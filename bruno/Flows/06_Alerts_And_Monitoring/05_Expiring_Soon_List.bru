@@ -1,0 +1,38 @@
+meta {
+  name: 05. Expiring Soon Medicines
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/medicines?expiredStatus=soon&sortBy=expiredDate&sortOrder=asc&limit=50
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  expiredStatus: soon
+  sortBy: expiredDate
+  sortOrder: asc
+  limit: 50
+}
+
+docs {
+  Obat yang akan kadaluarsa dalam 30 hari ke depan. Sorted by
+  expiredDate ascending (yang paling dekat expired di atas).
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("all items have expiredStatus EXPIRED_SOON", function() {
+    res.body.data.forEach(function(m) {
+      expect(m.expiredStatus).to.equal("EXPIRED_SOON");
+    });
+  });
+}

@@ -1,0 +1,45 @@
+meta {
+  name: List
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/stock-movements?page=1&limit=10
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  ~medicineId: {{testMedicineId}}
+  ~type: IN
+  ~reason: PURCHASE
+  ~supplierId: {{testSupplierId}}
+  ~startDate: 2025-05-01
+  ~endDate: 2025-05-31
+  ~search: paracetamol
+  ~page: 1
+  ~limit: 10
+}
+
+docs {
+  Riwayat mutasi stok dengan banyak filter.
+  Allowed type: IN | OUT. Allowed reason: PURCHASE | SALE | DAMAGED | EXPIRED | LOST | ADJUSTMENT | OTHER.
+  Search di medicine.name, medicine.code, supplier.name, notes.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data is array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+  test("meta has pagination", function() {
+    expect(res.body.meta).to.have.property("page");
+  });
+}

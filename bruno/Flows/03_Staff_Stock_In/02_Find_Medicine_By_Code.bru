@@ -1,0 +1,43 @@
+meta {
+  name: 02. Find Medicine by Code
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/medicines?search=PAR-500&limit=5
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  search: PAR-500
+  limit: 5
+}
+
+script:post-response {
+  if (res.status === 200 && res.body?.data?.length > 0) {
+    bru.setEnvVar("testMedicineId", res.body.data[0].id);
+  }
+}
+
+docs {
+  Cari obat berdasarkan code/SKU. Ambil ID obat pertama hasil pencarian
+  untuk digunakan di stock-in. Search field: name, code, supplier.name, category.name.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("found at least 1 medicine", function() {
+    expect(res.body.data).to.have.length.at.least(1);
+  });
+  test("medicineId saved from first result", function() {
+    expect(bru.getEnvVar("testMedicineId")).to.match(/^[0-9a-f-]{36}$/);
+  });
+}

@@ -1,0 +1,43 @@
+meta {
+  name: 06. Stock Out (DAMAGED)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/stock-movements/out
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "medicineId": "{{testMedicineId}}",
+    "quantity": 1,
+    "reason": "DAMAGED",
+    "transactionDate": "2026-06-16",
+    "notes": "Obat rusak, kadaluarsa sebelum dipakai"
+  }
+}
+
+docs {
+  Reason alternatif: DAMAGED (rusak). Qty 1 untuk memastikan tidak
+  kena INSUFFICIENT_STOCK.
+}
+
+tests {
+  test("status is 201", function() {
+    expect(res.status).to.equal(201);
+  });
+  test("reason is DAMAGED", function() {
+    expect(res.body.data.reason).to.equal("DAMAGED");
+  });
+}

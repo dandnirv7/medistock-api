@@ -1,0 +1,40 @@
+meta {
+  name: Create - Duplicate
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/categories
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Tablet",
+    "description": "duplikat"
+  }
+}
+
+docs {
+  Negative case: nama kategori sudah ada harus return 409 DUPLICATE_RESOURCE.
+  Jalankan setelah Create.bru sukses.
+}
+
+tests {
+  test("status is 409", function() {
+    expect(res.status).to.equal(409);
+  });
+  test("error.code is DUPLICATE_RESOURCE", function() {
+    expect(res.body.error.code).to.equal("DUPLICATE_RESOURCE");
+  });
+}

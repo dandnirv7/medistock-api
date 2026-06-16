@@ -1,0 +1,46 @@
+meta {
+  name: List
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/medicines?page=1&limit=10
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  ~search: paracetamol
+  ~categoryId: {{testCategoryId}}
+  ~supplierId: {{testSupplierId}}
+  ~lowStock: true
+  ~expiredStatus: soon
+  ~sortBy: name
+  ~sortOrder: asc
+  ~page: 1
+  ~limit: 10
+}
+
+docs {
+  List obat dengan banyak filter dan sort.
+  Filter `expiredStatus`: soon | expired | safe.
+  Search di name, code, supplier.name, category.name.
+  Derived: stockStatus (LOW_STOCK | SAFE), expiredStatus (EXPIRED | EXPIRED_SOON | SAFE | UNKNOWN).
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data is array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+  test("meta has pagination", function() {
+    expect(res.body.meta).to.have.property("page");
+  });
+}

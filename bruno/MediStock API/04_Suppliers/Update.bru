@@ -1,0 +1,42 @@
+meta {
+  name: Update
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/suppliers/{{testSupplierId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "PT Kimia Farma Tbk",
+    "phone": "081234567890",
+    "email": "supplier@example.com",
+    "address": "Bandung",
+    "notes": "Supplier utama - update alamat"
+  }
+}
+
+docs {
+  Update supplier. Partial update — field tidak dikirim tidak berubah.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data.address updated", function() {
+    expect(res.body.data.address).to.equal("Bandung");
+  });
+}

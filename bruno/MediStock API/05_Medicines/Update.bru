@@ -1,0 +1,38 @@
+meta {
+  name: Update
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/medicines/{{testMedicineId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Paracetamol 500 mg (updated)",
+    "sellingPrice": 550,
+    "description": "Harga naik Juni 2026"
+  }
+}
+
+docs {
+  Update obat. PENTING: `currentStock` TIDAK boleh diubah via PATCH —
+  harus pakai /stock-movements/in|out. Test ini hanya update field lain.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

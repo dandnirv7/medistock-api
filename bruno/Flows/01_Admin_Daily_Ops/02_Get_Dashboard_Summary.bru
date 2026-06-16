@@ -1,0 +1,28 @@
+meta {
+  name: 02. Get Dashboard Summary
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/dashboard/summary
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Step 2: Cek ringkasan dashboard — total obat, alert low-stock & expired.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("has totals", function() {
+    expect(res.body.data.totalMedicines).to.be.a("number");
+  });
+}

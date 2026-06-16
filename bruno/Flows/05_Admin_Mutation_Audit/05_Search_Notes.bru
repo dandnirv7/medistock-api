@@ -1,0 +1,32 @@
+meta {
+  name: 05. Search by Notes
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/stock-movements?search=pembelian&page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  search: pembelian
+  page: 1
+  limit: 20
+}
+
+docs {
+  Search di field notes. Berguna untuk cari mutasi dengan keyword
+  tertentu (mis. nama pelanggan, nomor faktur, dsb).
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

@@ -1,0 +1,29 @@
+meta {
+  name: 03. Get Current Stock
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/medicines/{{testMedicineId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Ambil detail obat untuk lihat currentStock sebelum dispense.
+  Berguna untuk pilih quantity yang valid (atau untuk negative case).
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("currentStock is number", function() {
+    expect(res.body.data.currentStock).to.be.a("number");
+  });
+}

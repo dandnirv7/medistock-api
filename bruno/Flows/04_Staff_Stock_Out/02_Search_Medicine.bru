@@ -1,0 +1,39 @@
+meta {
+  name: 02. Search Medicine
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/medicines?search=paracetamol&limit=5
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  search: paracetamol
+  limit: 5
+}
+
+script:post-response {
+  if (res.status === 200 && res.body?.data?.length > 0) {
+    bru.setEnvVar("testMedicineId", res.body.data[0].id);
+  }
+}
+
+docs {
+  Cari obat untuk dispense. Pakai hasil pertama.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("medicineId saved", function() {
+    expect(bru.getEnvVar("testMedicineId")).to.match(/^[0-9a-f-]{36}$/);
+  });
+}

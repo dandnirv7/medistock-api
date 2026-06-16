@@ -1,0 +1,39 @@
+meta {
+  name: Create - Invalid Email
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/suppliers
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Supplier Test",
+    "email": "bukan-email-valid"
+  }
+}
+
+docs {
+  Negative case: format email salah harus return 422 VALIDATION_ERROR.
+}
+
+tests {
+  test("status is 422", function() {
+    expect(res.status).to.equal(422);
+  });
+  test("error.code is VALIDATION_ERROR", function() {
+    expect(res.body.error.code).to.equal("VALIDATION_ERROR");
+  });
+}

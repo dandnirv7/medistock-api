@@ -1,0 +1,28 @@
+meta {
+  name: GetById
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/medicines/{{testMedicineId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Detail obat. Pakai `{{testMedicineId}}` dari Create.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data has category", function() {
+    expect(res.body.data.category).to.have.property("id");
+  });
+}

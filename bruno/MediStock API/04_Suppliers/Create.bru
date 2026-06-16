@@ -1,0 +1,52 @@
+meta {
+  name: Create
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/suppliers
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "PT Kimia Farma Tbk",
+    "phone": "081234567890",
+    "email": "supplier@example.com",
+    "address": "Jakarta",
+    "notes": "Supplier utama"
+  }
+}
+
+docs {
+  Buat supplier baru. ID otomatis tersimpan ke `testSupplierId`.
+  Hanya ADMIN yang boleh.
+}
+
+script:post-response {
+  if (res.status === 201 && res.body?.data?.id) {
+    bru.setEnvVar("testSupplierId", res.body.data.id);
+  }
+}
+
+tests {
+  test("status is 201", function() {
+    expect(res.status).to.equal(201);
+  });
+  test("data.id is uuid", function() {
+    expect(res.body.data.id).to.match(/^[0-9a-f-]{36}$/);
+  });
+  test("data.name matches", function() {
+    expect(res.body.data.name).to.equal("PT Kimia Farma Tbk");
+  });
+}

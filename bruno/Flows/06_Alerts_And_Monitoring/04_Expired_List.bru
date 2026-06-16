@@ -1,0 +1,36 @@
+meta {
+  name: 04. Expired Medicines
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/medicines?expiredStatus=expired&limit=50
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  expiredStatus: expired
+  limit: 50
+}
+
+docs {
+  Obat yang sudah kadaluarsa (expiredDate < today).
+  Wajib ditandai untuk quarantine / pemusnahan.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("all items have expiredStatus EXPIRED", function() {
+    res.body.data.forEach(function(m) {
+      expect(m.expiredStatus).to.equal("EXPIRED");
+    });
+  });
+}

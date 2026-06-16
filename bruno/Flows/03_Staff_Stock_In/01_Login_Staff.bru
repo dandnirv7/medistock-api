@@ -1,0 +1,42 @@
+meta {
+  name: 01. Login Staff
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "username": "{{staffUsername}}",
+    "password": "{{staffPassword}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body?.data?.accessToken) {
+    bru.setEnvVar("token", res.body.data.accessToken);
+  }
+}
+
+docs {
+  Login sebagai STAFF (bukan admin). Token staff memiliki permission
+  lebih sedikit — tidak bisa CRUD master data, hanya stock movements.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("user.role is STAFF", function() {
+    expect(res.body.data.user.role).to.equal("STAFF");
+  });
+}

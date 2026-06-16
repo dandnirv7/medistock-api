@@ -1,0 +1,30 @@
+meta {
+  name: Logout
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/auth/logout
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Logout user. Untuk MVP cukup hapus token di client (mobile). Endpoint
+  ini ada agar contract terlihat lengkap. Setelah run, clear `{{token}}`
+  manual di env jika ingin re-login sebagai user berbeda.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("response success is true", function() {
+    expect(res.body.success).to.equal(true);
+  });
+}

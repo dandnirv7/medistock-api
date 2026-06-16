@@ -1,0 +1,41 @@
+meta {
+  name: Update
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/categories/{{testCategoryId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Tablet",
+    "description": "Obat berbentuk tablet dan kapsul",
+    "isActive": true
+  }
+}
+
+docs {
+  Update kategori. Hanya field yang dikirim yang berubah (partial update).
+  `name` harus tetap unik jika diubah.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data.description updated", function() {
+    expect(res.body.data.description).to.equal("Obat berbentuk tablet dan kapsul");
+  });
+}

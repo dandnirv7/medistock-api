@@ -1,0 +1,48 @@
+meta {
+  name: StockOut - Insufficient Stock
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/stock-movements/out
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "medicineId": "{{testMedicineId}}",
+    "quantity": 99999,
+    "reason": "SALE",
+    "transactionDate": "2026-06-16"
+  }
+}
+
+docs {
+  Negative case: minta qty lebih besar dari stok harus 409 INSUFFICIENT_STOCK
+  dengan details { availableStock, requestedQuantity }.
+}
+
+tests {
+  test("status is 409", function() {
+    expect(res.status).to.equal(409);
+  });
+  test("error.code is INSUFFICIENT_STOCK", function() {
+    expect(res.body.error.code).to.equal("INSUFFICIENT_STOCK");
+  });
+  test("error.details has availableStock", function() {
+    expect(res.body.error.details).to.have.property("availableStock");
+  });
+  test("error.details has requestedQuantity", function() {
+    expect(res.body.error.details).to.have.property("requestedQuantity");
+  });
+}

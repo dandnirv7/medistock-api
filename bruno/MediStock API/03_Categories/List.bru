@@ -1,0 +1,40 @@
+meta {
+  name: List
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/categories?page=1&limit=10
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  ~search: tablet
+  ~isActive: true
+  ~page: 1
+  ~limit: 10
+}
+
+docs {
+  List kategori dengan pagination, search by name, dan filter isActive.
+  Sesuai docs/api_contract.md §6.3 dan §5.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data is array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+  test("meta has pagination", function() {
+    expect(res.body.meta).to.have.property("page");
+    expect(res.body.meta).to.have.property("total");
+  });
+}

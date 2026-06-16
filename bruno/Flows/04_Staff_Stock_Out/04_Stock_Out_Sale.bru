@@ -1,0 +1,47 @@
+meta {
+  name: 04. Stock Out (SALE)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/stock-movements/out
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "medicineId": "{{testMedicineId}}",
+    "quantity": 3,
+    "reason": "SALE",
+    "transactionDate": "2026-06-16",
+    "notes": "Penjualan ke pelanggan"
+  }
+}
+
+docs {
+  Catat stok keluar untuk penjualan. Quantity 3 — pastikan stok
+  obat minimal 3. Jika seed data punya stok lebih kecil, ganti nilainya.
+}
+
+tests {
+  test("status is 201", function() {
+    expect(res.status).to.equal(201);
+  });
+  test("type OUT & reason SALE", function() {
+    expect(res.body.data.type).to.equal("OUT");
+    expect(res.body.data.reason).to.equal("SALE");
+  });
+  test("stockAfter decreased", function() {
+    expect(res.body.data.stockAfter).to.be.below(res.body.data.stockBefore);
+  });
+}

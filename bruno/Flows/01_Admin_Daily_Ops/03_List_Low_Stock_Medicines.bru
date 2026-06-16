@@ -1,0 +1,35 @@
+meta {
+  name: 03. List Low-Stock Medicines
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/medicines?lowStock=true&sortBy=currentStock&sortOrder=asc
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  lowStock: true
+  sortBy: currentStock
+  sortOrder: asc
+}
+
+docs {
+  Step 3: Lihat daftar obat yang stoknya <= minimumStock, diurutkan
+  dari yang paling sedikit. Ini list yang harus di-restock hari ini.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data is array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+}

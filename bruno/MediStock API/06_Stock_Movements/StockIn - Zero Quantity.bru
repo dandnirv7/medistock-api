@@ -1,0 +1,40 @@
+meta {
+  name: StockIn - Zero Quantity
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/stock-movements/in
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "medicineId": "{{testMedicineId}}",
+    "quantity": 0,
+    "transactionDate": "2026-06-16"
+  }
+}
+
+docs {
+  Negative case: quantity=0 harus 422 VALIDATION_ERROR (rule: greater than 0).
+}
+
+tests {
+  test("status is 422", function() {
+    expect(res.status).to.equal(422);
+  });
+  test("error.code is VALIDATION_ERROR", function() {
+    expect(res.body.error.code).to.equal("VALIDATION_ERROR");
+  });
+}

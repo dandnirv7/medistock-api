@@ -1,0 +1,40 @@
+meta {
+  name: 02. Dashboard Alerts Summary
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/dashboard/summary
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Endpoint utama untuk alert: counts + list detail lowStock, expiredSoon.
+  Business rule:
+  - lowStock = currentStock <= minimumStock
+  - expiredSoon = expiredDate <= today + 30 days AND expiredDate >= today
+  - expired = expiredDate < today
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("alert counts are numbers", function() {
+    expect(res.body.data.lowStockCount).to.be.a("number");
+    expect(res.body.data.expiredSoonCount).to.be.a("number");
+    expect(res.body.data.expiredCount).to.be.a("number");
+  });
+  test("lowStockMedicines is array", function() {
+    expect(res.body.data.lowStockMedicines).to.be.an("array");
+  });
+  test("expiredSoonMedicines is array", function() {
+    expect(res.body.data.expiredSoonMedicines).to.be.an("array");
+  });
+}

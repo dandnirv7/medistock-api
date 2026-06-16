@@ -1,0 +1,46 @@
+meta {
+  name: 06. Create Medicine #2
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/medicines
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "code": "AMX-500",
+    "name": "Amoxicillin 500 mg",
+    "categoryId": "{{testCategoryId}}",
+    "supplierId": "{{testSupplierId}}",
+    "unit": "Kapsul",
+    "purchasePrice": 800,
+    "sellingPrice": 1500,
+    "currentStock": 8,
+    "minimumStock": 20,
+    "expiredDate": "2026-08-15",
+    "description": "Antibiotik."
+  }
+}
+
+docs {
+  Obat kedua dengan stok rendah (currentStock=8, minimumStock=20) —
+  sengaja untuk trigger alert low-stock di dashboard. Code harus unik.
+}
+
+tests {
+  test("status is 201", function() {
+    expect(res.status).to.equal(201);
+  });
+}

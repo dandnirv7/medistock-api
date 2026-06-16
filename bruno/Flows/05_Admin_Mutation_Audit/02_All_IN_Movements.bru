@@ -1,0 +1,40 @@
+meta {
+  name: 02. All IN Movements
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/stock-movements?type=IN&page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  type: IN
+  page: 1
+  limit: 20
+}
+
+docs {
+  Audit trail: semua stok masuk. Untuk cek supplier mana yang paling
+  aktif supply, atau validasi qty beli.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data is array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+  test("all are type IN", function() {
+    res.body.data.forEach(function(m) {
+      expect(m.type).to.equal("IN");
+    });
+  });
+}

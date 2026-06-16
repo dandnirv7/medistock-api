@@ -1,0 +1,40 @@
+meta {
+  name: 07. Verify OUT Movements
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/stock-movements?type=OUT&medicineId={{testMedicineId}}&limit=10
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  type: OUT
+  medicineId: {{testMedicineId}}
+  limit: 10
+}
+
+docs {
+  Verifikasi: harusnya ada 2 movement OUT sukses (SALE & DAMAGED),
+  bukan 3 (insufficient stock tidak tercatat).
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("at least 2 OUT movements", function() {
+    expect(res.body.data).to.have.length.at.least(2);
+  });
+  test("all are type OUT", function() {
+    res.body.data.forEach(function(m) {
+      expect(m.type).to.equal("OUT");
+    });
+  });
+}

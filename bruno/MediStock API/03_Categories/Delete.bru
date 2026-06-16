@@ -1,0 +1,29 @@
+meta {
+  name: Delete
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/categories/{{testCategoryId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Soft delete kategori (isActive=false). Setelah ini List dengan isActive=true
+  tidak akan menampilkan kategori ini. Hanya ADMIN yang boleh.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("response success is true", function() {
+    expect(res.body.success).to.equal(true);
+  });
+}

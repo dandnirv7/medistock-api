@@ -1,0 +1,35 @@
+meta {
+  name: 05. Update Medicine Price
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/medicines/{{testMedicineId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "sellingPrice": 550
+  }
+}
+
+docs {
+  Update harga jual. BUKAN currentStock — itu hanya via stock-movements.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

@@ -1,0 +1,29 @@
+meta {
+  name: 06. Dashboard Final Check
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/dashboard/summary
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Cek dashboard setelah semua transaksi — angka stok & alert harus
+  sudah ter-update sesuai mutasi yang baru saja dibuat.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("has totals", function() {
+    expect(res.body.data.totalMedicines).to.be.a("number");
+  });
+}

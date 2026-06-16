@@ -1,0 +1,31 @@
+meta {
+  name: GetMe
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/auth/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Ambil data user yang sedang login. Wajib sudah Login dulu agar `{{token}}` ter-set.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("user.id is uuid", function() {
+    expect(res.body.data.id).to.match(/^[0-9a-f-]{36}$/);
+  });
+  test("user.role is ADMIN or STAFF", function() {
+    expect(["ADMIN", "STAFF"]).to.include(res.body.data.role);
+  });
+}

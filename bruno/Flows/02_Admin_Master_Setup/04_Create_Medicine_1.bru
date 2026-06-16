@@ -1,0 +1,55 @@
+meta {
+  name: 04. Create Medicine #1
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/medicines
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "code": "PAR-500",
+    "name": "Paracetamol 500 mg",
+    "categoryId": "{{testCategoryId}}",
+    "supplierId": "{{testSupplierId}}",
+    "unit": "Tablet",
+    "purchasePrice": 250,
+    "sellingPrice": 500,
+    "currentStock": 50,
+    "minimumStock": 10,
+    "expiredDate": "2026-12-31",
+    "description": "Obat penurun panas dan pereda nyeri."
+  }
+}
+
+script:post-response {
+  if (res.status === 201 && res.body?.data?.id) {
+    bru.setEnvVar("testMedicineId", res.body.data.id);
+  }
+}
+
+docs {
+  Buat obat pertama. ID disimpan ke `testMedicineId` untuk step
+  stock-in / stock-out nanti. Code harus unik — ganti jika "PAR-500" sudah ada.
+}
+
+tests {
+  test("status is 201", function() {
+    expect(res.status).to.equal(201);
+  });
+  test("medicineId saved", function() {
+    expect(bru.getEnvVar("testMedicineId")).to.match(/^[0-9a-f-]{36}$/);
+  });
+}

@@ -1,0 +1,35 @@
+meta {
+  name: 04. Filter by Supplier
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/stock-movements?supplierId={{testSupplierId}}&page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  supplierId: {{testSupplierId}}
+  page: 1
+  limit: 20
+}
+
+docs {
+  Lihat semua mutasi dari supplier tertentu. Berguna untuk audit
+  histori kerja sama supplier.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data is array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+}

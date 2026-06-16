@@ -1,0 +1,28 @@
+meta {
+  name: GetById
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/suppliers/{{testSupplierId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Ambil detail supplier by ID. Pakai `{{testSupplierId}}` dari Create.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data.id matches", function() {
+    expect(res.body.data.id).to.equal(bru.getEnvVar("testSupplierId"));
+  });
+}

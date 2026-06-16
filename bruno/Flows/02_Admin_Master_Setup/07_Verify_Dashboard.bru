@@ -1,0 +1,32 @@
+meta {
+  name: 07. Verify Dashboard
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/dashboard/summary
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Verifikasi: setelah setup, dashboard harus menampilkan 2 medicine
+  dan Amoxicillin muncul di lowStockMedicines.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("totalMedicines >= 2", function() {
+    expect(res.body.data.totalMedicines).to.be.at.least(2);
+  });
+  test("lowStockCount >= 1", function() {
+    expect(res.body.data.lowStockCount).to.be.at.least(1);
+  });
+}

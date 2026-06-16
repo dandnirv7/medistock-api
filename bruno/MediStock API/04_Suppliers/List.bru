@@ -1,0 +1,39 @@
+meta {
+  name: List
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/suppliers?page=1&limit=10
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+query {
+  ~search: kimia
+  ~isActive: true
+  ~page: 1
+  ~limit: 10
+}
+
+docs {
+  List supplier dengan pagination, search, dan filter isActive.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data is array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+  test("meta has pagination", function() {
+    expect(res.body.meta).to.have.property("page");
+    expect(res.body.meta).to.have.property("total");
+  });
+}

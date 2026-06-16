@@ -1,0 +1,47 @@
+meta {
+  name: 03. Stock In (PURCHASE)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/stock-movements/in
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "medicineId": "{{testMedicineId}}",
+    "supplierId": "{{testSupplierId}}",
+    "quantity": 30,
+    "transactionDate": "2026-06-16",
+    "notes": "Pembelian rutin pagi ini"
+  }
+}
+
+docs {
+  Catat stok masuk. Reason otomatis PURCHASE. supplierId opsional —
+  kosongkan jika tidak ada supplier spesifik.
+}
+
+tests {
+  test("status is 201", function() {
+    expect(res.status).to.equal(201);
+  });
+  test("type IN & reason PURCHASE", function() {
+    expect(res.body.data.type).to.equal("IN");
+    expect(res.body.data.reason).to.equal("PURCHASE");
+  });
+  test("stockAfter increased", function() {
+    expect(res.body.data.stockAfter).to.be.above(res.body.data.stockBefore);
+  });
+}

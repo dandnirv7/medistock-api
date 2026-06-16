@@ -1,0 +1,25 @@
+meta {
+  name: Delete
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/medicines/{{testMedicineId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Soft delete obat (isActive=false). Hanya ADMIN yang boleh.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

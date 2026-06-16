@@ -1,0 +1,40 @@
+meta {
+  name: GetSummary
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/dashboard/summary
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Ringkasan dashboard: total medicines/categories/suppliers,
+  jumlah low-stock, expired soon, expired, dan list detail obat terkait.
+  Business rule: lowStock = currentStock <= minimumStock.
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("data has totals", function() {
+    expect(res.body.data).to.have.property("totalMedicines");
+    expect(res.body.data).to.have.property("totalCategories");
+    expect(res.body.data).to.have.property("totalSuppliers");
+  });
+  test("data has alert counts", function() {
+    expect(res.body.data).to.have.property("lowStockCount");
+    expect(res.body.data).to.have.property("expiredSoonCount");
+    expect(res.body.data).to.have.property("expiredCount");
+  });
+  test("lowStockMedicines is array", function() {
+    expect(res.body.data.lowStockMedicines).to.be.an("array");
+  });
+}

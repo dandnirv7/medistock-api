@@ -1,0 +1,48 @@
+meta {
+  name: StockOut
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/stock-movements/out
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "medicineId": "{{testMedicineId}}",
+    "quantity": 5,
+    "reason": "SALE",
+    "transactionDate": "2026-06-16",
+    "notes": "Penjualan ke pelanggan"
+  }
+}
+
+docs {
+  Catat stok keluar. Reason wajib: SALE | DAMAGED | EXPIRED | LOST | ADJUSTMENT | OTHER.
+  Admin & Staff boleh akses. Business rule: jika quantity > currentStock → 409 INSUFFICIENT_STOCK.
+}
+
+tests {
+  test("status is 201", function() {
+    expect(res.status).to.equal(201);
+  });
+  test("type is OUT", function() {
+    expect(res.body.data.type).to.equal("OUT");
+  });
+  test("stockAfter = stockBefore - quantity", function() {
+    expect(res.body.data.stockAfter).to.equal(
+      res.body.data.stockBefore - res.body.data.quantity
+    );
+  });
+}

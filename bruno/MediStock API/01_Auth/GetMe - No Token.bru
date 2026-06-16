@@ -1,0 +1,24 @@
+meta {
+  name: GetMe - No Token
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/auth/me
+  body: none
+  auth: none
+}
+
+docs {
+  Negative case: akses tanpa token harus return 401 UNAUTHORIZED.
+}
+
+tests {
+  test("status is 401", function() {
+    expect(res.status).to.equal(401);
+  });
+  test("error.code is UNAUTHORIZED", function() {
+    expect(res.body.error.code).to.equal("UNAUTHORIZED");
+  });
+}

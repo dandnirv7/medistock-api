@@ -5,10 +5,13 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { assertProductionJwtSecret } from './common/config/prod-env-assert';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
 async function bootstrap(): Promise<void> {
+  assertProductionJwtSecret();
+
   const app = await NestFactory.create(AppModule, { bufferLogs: false });
 
   // Security headers (CSP, HSTS, X-Frame-Options, etc.). Skipped for the

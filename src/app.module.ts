@@ -16,27 +16,39 @@ import { SuppliersModule } from './suppliers/suppliers.module';
 type ThrottlerEnv = 'production' | 'development' | 'test';
 const env = (process.env.NODE_ENV ?? 'development') as ThrottlerEnv;
 
-// Three presets:
-//   - production  : strict defaults (60/min) + brute-force login (5/min).
-//   - development : relaxed defaults (600/min) so the Flutter client
-//                   integration loop doesn't trip the cap. Login is still
-//                   throttled at 5/min to mirror production behaviour.
-//   - test        : effectively unlimited so e2e suites can hammer routes.
+// Throttle limits can be overridden via env vars so operators can
+// raise them for internal/demo deployments without code changes:
+//   THROTTLE_DEFAULT_LIMIT  — per-minute cap for the 'default' bucket
+//   THROTTLE_LOGIN_LIMIT    — per-minute cap for the 'login' bucket
+//   THROTTLE_TEST_LIMIT     — per-minute cap in NODE_ENV=test
+// When unset, each env uses a sensible preset:
+//   - test        : 1_000_000/min (e2e suites need to hammer routes).
+//   - development : 10_000/min   (single dev workstation, no spam).
+//   - production  : 60/min       (mirrors real-world brute-force defence).
 // jest-e2e.json's setupFiles sets NODE_ENV=test before any module import.
+function readLimit(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
+}
+const defaultLimit = readLimit(
+  'THROTTLE_DEFAULT_LIMIT',
+  env === 'production' ? 60 : env === 'test' ? 1_000_000 : 10_000,
+);
+const loginLimit = readLimit('THROTTLE_LOGIN_LIMIT', 5);
+const testLimit = readLimit('THROTTLE_TEST_LIMIT', 1_000_000);
+
 const throttlerConfig = (() => {
   switch (env) {
     case 'test':
-      return [{ name: 'default', ttl: 60_000, limit: 1_000_000 }];
+      return [{ name: 'default', ttl: 60_000, limit: testLimit }];
     case 'development':
-      return [
-        { name: 'default', ttl: 60_000, limit: 600 },
-        { name: 'login', ttl: 60_000, limit: 5 },
-      ];
     case 'production':
     default:
       return [
-        { name: 'default', ttl: 60_000, limit: 60 },
-        { name: 'login', ttl: 60_000, limit: 5 },
+        { name: 'default', ttl: 60_000, limit: defaultLimit },
+        { name: 'login', ttl: 60_000, limit: loginLimit },
       ];
   }
 })();

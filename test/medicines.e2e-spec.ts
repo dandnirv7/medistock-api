@@ -15,6 +15,10 @@ describe('Medicines (e2e)', () => {
   let categoryId: string;
   let supplierId: string;
 
+  function futureIso(days: number): string {
+    return new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+  }
+
   async function seedFixtures(): Promise<void> {
     await resetDatabase(app);
     const prisma = app.get<PrismaService>(PrismaService);
@@ -202,5 +206,69 @@ describe('Medicines (e2e)', () => {
       })
       .expect(400);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
+  });
+  it('GET /medicines?lowStock=true&expiredStatus=soon returns the intersection', async () => {
+    // Within-window: LOW stock + near expiry. Should be returned.
+    await request(app.getHttpServer())
+      .post('/api/v1/medicines')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        code: 'LOW-SOON',
+        name: 'Low and Soon',
+        categoryId,
+        supplierId,
+        unit: 'Tablet',
+        purchasePrice: 1,
+        sellingPrice: 2,
+        currentStock: 2,
+        minimumStock: 10,
+        expiredDate: futureIso(15),
+      })
+      .expect(201);
+    // Out-of-window: LOW stock but expiry far in the future. Excluded by
+    // expiredStatus=soon even though it would match lowStock=true alone.
+    await request(app.getHttpServer())
+      .post('/api/v1/medicines')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        code: 'LOW-FUTURE',
+        name: 'Low but Future',
+        categoryId,
+        supplierId,
+        unit: 'Tablet',
+        purchasePrice: 1,
+        sellingPrice: 2,
+        currentStock: 1,
+        minimumStock: 10,
+        expiredDate: '2099-12-31',
+      })
+      .expect(201);
+    // Out-of-window: SAFE stock + near expiry. Excluded by lowStock=true.
+    await request(app.getHttpServer())
+      .post('/api/v1/medicines')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        code: 'SAFE-SOON',
+        name: 'Safe and Soon',
+        categoryId,
+        supplierId,
+        unit: 'Tablet',
+        purchasePrice: 1,
+        sellingPrice: 2,
+        currentStock: 50,
+        minimumStock: 10,
+        expiredDate: futureIso(20),
+      })
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/medicines?lowStock=true&expiredStatus=soon')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0].code).toBe('LOW-SOON');
+    expect(res.body.data[0].stockStatus).toBe('LOW_STOCK');
+    expect(res.body.data[0].expiredStatus).toBe('EXPIRED_SOON');
+    expect(res.body.meta.total).toBe(1);
   });
 });

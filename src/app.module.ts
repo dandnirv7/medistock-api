@@ -18,8 +18,10 @@ const env = (process.env.NODE_ENV ?? 'development') as ThrottlerEnv;
 
 // Throttle limits can be overridden via env vars so operators can
 // raise them for internal/demo deployments without code changes:
-//   THROTTLE_DEFAULT_LIMIT  — per-minute cap for the 'default' bucket
-//   THROTTLE_LOGIN_LIMIT    — per-minute cap for the 'login' bucket
+//   THROTTLE_DEFAULT_LIMIT  — per-minute cap for the global 'default' bucket
+//   THROTTLE_LOGIN_LIMIT    — per-minute cap for the login route only
+//                             (applied in auth.controller.ts, overrides
+//                             the 'default' bucket on POST /auth/login)
 //   THROTTLE_TEST_LIMIT     — per-minute cap in NODE_ENV=test
 // When unset, each env uses a sensible preset:
 //   - test        : 1_000_000/min (e2e suites need to hammer routes).
@@ -36,9 +38,15 @@ const defaultLimit = readLimit(
   'THROTTLE_DEFAULT_LIMIT',
   env === 'production' ? 60 : env === 'test' ? 1_000_000 : 10_000,
 );
-const loginLimit = readLimit('THROTTLE_LOGIN_LIMIT', 5);
 const testLimit = readLimit('THROTTLE_TEST_LIMIT', 1_000_000);
 
+// IMPORTANT: register exactly ONE global throttler ('default').
+// @nestjs/throttler v6 applies EVERY named throttler declared here to
+// EVERY route (they must all pass). A second global 'login' bucket would
+// therefore cap *all* endpoints at the login limit (5/min), not just
+// /auth/login — which is exactly the bug that produced 429s across the
+// app. The strict login limit lives on the login route itself, where it
+// overrides the 'default' bucket only for that handler.
 const throttlerConfig = (() => {
   switch (env) {
     case 'test':
@@ -46,10 +54,7 @@ const throttlerConfig = (() => {
     case 'development':
     case 'production':
     default:
-      return [
-        { name: 'default', ttl: 60_000, limit: defaultLimit },
-        { name: 'login', ttl: 60_000, limit: loginLimit },
-      ];
+      return [{ name: 'default', ttl: 60_000, limit: defaultLimit }];
   }
 })();
 

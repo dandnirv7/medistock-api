@@ -56,6 +56,25 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserItemDto } from './dto/user-item.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 
+// Stricter per-minute cap for the login route, overridable via
+// THROTTLE_LOGIN_LIMIT (defaults to 5/min) to slow brute-force guessing.
+// This overrides the global 'default' throttler bucket on this handler
+// only — it does NOT register a second global throttler (which would
+// otherwise throttle every endpoint at this limit).
+// Under NODE_ENV=test the cap is lifted (mirrors the global test config)
+// so e2e suites can hammer /auth/login without tripping 429s.
+function resolveLoginLimit(): number {
+  if (process.env.NODE_ENV === 'test') {
+    const testRaw = Number(process.env.THROTTLE_TEST_LIMIT);
+    return Number.isFinite(testRaw) && testRaw > 0
+      ? Math.floor(testRaw)
+      : 1_000_000;
+  }
+  const raw = Number(process.env.THROTTLE_LOGIN_LIMIT);
+  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 5;
+}
+const LOGIN_LIMIT = resolveLoginLimit();
+
 @Controller('auth')
 @ApiTags('auth')
 @ApiBearerAuth('jwt')
@@ -63,8 +82,9 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   // Stricter limit on login to slow down brute-force password guesses.
+  // Overrides the global 'default' bucket for this route only.
   @Public()
-  @Throttle({ login: { ttl: 60_000, limit: 5 } })
+  @Throttle({ default: { ttl: 60_000, limit: LOGIN_LIMIT } })
   @Post('login')
   @HttpCode(200)
   @ApiOperation({ summary: 'Login with username + password' })

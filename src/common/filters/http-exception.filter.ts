@@ -81,6 +81,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
           message = 'Validation failed';
         }
       }
+
+      // Rate limiting (@nestjs/throttler) throws a 429 whose default body
+      // message is the raw "ThrottlerException: Too Many Requests". That
+      // leaks an internal class name AND, because 429 was not in the
+      // status->code map, it used to be mislabeled INTERNAL_SERVER_ERROR.
+      // Normalise it to a clean, client-friendly envelope so the mobile
+      // app can detect it (code) and show a calm message (message) instead
+      // of a crash-like error. The ThrottlerGuard's Retry-After header is
+      // left untouched on the response.
+      if (status === HttpStatus.TOO_MANY_REQUESTS) {
+        code = 'RATE_LIMITED';
+        message = 'Terlalu banyak permintaan. Coba lagi sebentar.';
+      }
     } else if (exception instanceof Error) {
       this.logger.error(exception.message, exception.stack);
     } else {
@@ -106,6 +119,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       404: 'NOT_FOUND',
       409: 'DUPLICATE_RESOURCE',
       422: 'VALIDATION_ERROR',
+      429: 'RATE_LIMITED',
       500: 'INTERNAL_SERVER_ERROR',
     };
     return map[status] ?? 'INTERNAL_SERVER_ERROR';

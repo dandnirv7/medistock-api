@@ -124,6 +124,7 @@ Semua endpoint selain login wajib menggunakan Bearer Token.
 |    404 | Resource not found                      |
 |    409 | Conflict / duplicate code or username   |
 |    422 | Validation error                        |
+|    429 | Too many requests / rate limited        |
 |    500 | Internal server error                   |
 
 ## 4.2 Error Codes
@@ -138,6 +139,7 @@ INSUFFICIENT_STOCK
 INVALID_STOCK_QUANTITY
 INVALID_DATE
 RESOURCE_IN_USE
+RATE_LIMITED
 INTERNAL_SERVER_ERROR
 ```
 

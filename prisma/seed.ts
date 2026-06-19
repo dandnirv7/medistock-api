@@ -88,7 +88,9 @@ async function main(): Promise<void> {
   // 15 medicines, planned to have:
   //   - 3 low stock (currentStock <= minimumStock)
   //   - 2 already expired
-  //   - 2 near expiry (within 30 days)
+  //   - 3 near expiry (within 30 days) — one of which is also low stock
+  //     (AMX-500) so the combined filter `lowStock=true&expiredStatus=soon`
+  //     returns at least one row. This is exercised by an e2e test.
   //   - rest safe
   type MedicineSeed = {
     code: string;
@@ -129,7 +131,7 @@ async function main(): Promise<void> {
       sellingPrice: 1500,
       currentStock: 8,
       minimumStock: 15,
-      expiredDate: new Date(today.getTime() + 120 * 24 * 60 * 60 * 1000),
+      expiredDate: new Date(today.getTime() + 25 * 24 * 60 * 60 * 1000),  // low stock + near expiry
       description: 'Antibiotik untuk infeksi bakteri.',
     },
     {

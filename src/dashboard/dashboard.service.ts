@@ -4,6 +4,7 @@ import { PrismaService } from '../database/prisma.service';
 import {
   computeExpiredStatus,
   computeStockStatus,
+  EXPIRED_SOON_DAYS,
 } from '../medicines/medicines.helpers';
 
 export interface LowStockMedicine {
@@ -47,7 +48,7 @@ export class DashboardService {
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
     );
     const soon = new Date(today);
-    soon.setUTCDate(soon.getUTCDate() + 30);
+    soon.setUTCDate(soon.getUTCDate() + EXPIRED_SOON_DAYS);
 
     const [
       totalMedicines,

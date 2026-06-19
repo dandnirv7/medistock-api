@@ -10,7 +10,11 @@ import { PrismaService } from '../database/prisma.service';
 import { CreateMedicineDto } from './dto/create-medicine.dto';
 import { MedicineQueryDto } from './dto/medicine-query.dto';
 import { UpdateMedicineDto } from './dto/update-medicine.dto';
-import { computeExpiredStatus, computeStockStatus } from './medicines.helpers';
+import {
+  computeExpiredStatus,
+  computeStockStatus,
+  EXPIRED_SOON_DAYS,
+} from './medicines.helpers';
 
 export interface MedicineItem {
   id: string;
@@ -46,7 +50,7 @@ export class MedicinesService {
 
     const reference = query.now ? new Date(query.now) : new Date();
     const soonBoundary = new Date(reference);
-    soonBoundary.setUTCDate(soonBoundary.getUTCDate() + 30);
+    soonBoundary.setUTCDate(soonBoundary.getUTCDate() + EXPIRED_SOON_DAYS);
     const today = new Date(
       Date.UTC(
         reference.getUTCFullYear(),

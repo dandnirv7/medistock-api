@@ -7,6 +7,10 @@ import { BusinessException } from '../common/exceptions/business.exception';
 import { Prisma, StockMovementReason, StockMovementType } from '@prisma/client';
 
 import { PrismaService } from '../database/prisma.service';
+import {
+  MedicineBatchesService,
+  PrismaTx,
+} from '../medicine-batches/medicine-batches.service';
 import { StockInDto } from './dto/stock-in.dto';
 import { StockMovementQueryDto } from './dto/stock-movement-query.dto';
 import { StockOpnameBulkDto } from './dto/stock-opname-bulk.dto';
@@ -39,7 +43,10 @@ export interface StockMovementItem {
 
 @Injectable()
 export class StockMovementsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly medicineBatchesService: MedicineBatchesService,
+  ) {}
 
   async list(query: StockMovementQueryDto): Promise<{
     data: StockMovementItem[];
@@ -201,16 +208,6 @@ export class StockMovementsService {
     if (!medicine) {
       throw new NotFoundException('Medicine not found');
     }
-    if (dto.quantity > medicine.currentStock) {
-      throw new BusinessException({
-        code: 'INSUFFICIENT_STOCK',
-        message: 'Stok tidak mencukupi',
-        details: {
-          availableStock: medicine.currentStock,
-          requestedQuantity: dto.quantity,
-        },
-      });
-    }
 
     const stockBefore = medicine.currentStock;
     const stockAfter = stockBefore - dto.quantity;
@@ -218,37 +215,106 @@ export class StockMovementsService {
       ? new Date(dto.transactionDate)
       : new Date();
 
-    const movement = await this.prisma.$transaction(async (tx) => {
-      await tx.medicine.update({
-        where: { id: medicine.id },
-        data: { currentStock: stockAfter },
-      });
-      const created = await tx.stockMovement.create({
-        data: {
-          medicineId: medicine.id,
-          userId,
-          type: StockMovementType.OUT,
-          reason: dto.reason,
-          quantity: dto.quantity,
-          stockBefore,
-          stockAfter,
-          transactionDate,
-          notes: dto.notes ?? null,
-        },
-      });
-      return created;
-    });
+    // Serializable isolation + one retry for serialization conflicts
+    const MAX_RETRIES = 1;
+    let lastErr: unknown;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const movement = await this.prisma.$transaction(
+          async (tx: PrismaTx) => {
+            // 1. Read batches sorted by FEFO (expiredDate ASC)
+            const batches = await this.medicineBatchesService.listForFefo(
+              tx,
+              dto.medicineId,
+            );
 
-    return {
-      id: movement.id,
-      medicineId: movement.medicineId,
-      type: 'OUT',
-      reason: movement.reason,
-      quantity: movement.quantity,
-      stockBefore: movement.stockBefore,
-      stockAfter: movement.stockAfter,
-      transactionDate: movement.transactionDate.toISOString().slice(0, 10),
-    };
+            // 2. Calculate total available from batches
+            const totalAvailable = batches.reduce((s, b) => s + b.quantity, 0);
+
+            // 3. Reject if insufficient batch stock
+            if (dto.quantity > totalAvailable) {
+              throw new BusinessException({
+                code: 'INSUFFICIENT_STOCK',
+                message: 'Stok tidak mencukupi',
+                details: {
+                  availableStock: totalAvailable,
+                  requestedQuantity: dto.quantity,
+                },
+              });
+            }
+
+            // 4. Consume batches in FEFO order (asc expiredDate)
+            let remaining = dto.quantity;
+            for (const batch of batches) {
+              if (remaining <= 0) break;
+              const consume = Math.min(remaining, batch.quantity);
+              await tx.medicineBatch.update({
+                where: { id: batch.id },
+                data: { quantity: { decrement: consume } },
+              });
+              remaining -= consume;
+            }
+
+            // 5. Update medicine currentStock
+            await tx.medicine.update({
+              where: { id: medicine.id },
+              data: { currentStock: stockAfter },
+            });
+
+            // 6. Create movement record
+            return tx.stockMovement.create({
+              data: {
+                medicineId: medicine.id,
+                userId,
+                type: StockMovementType.OUT,
+                reason: dto.reason,
+                quantity: dto.quantity,
+                stockBefore,
+                stockAfter,
+                transactionDate,
+                notes: dto.notes ?? null,
+              },
+            });
+          },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          },
+        );
+
+        return {
+          id: movement.id,
+          medicineId: movement.medicineId,
+          type: 'OUT',
+          reason: movement.reason,
+          quantity: movement.quantity,
+          stockBefore: movement.stockBefore,
+          stockAfter: movement.stockAfter,
+          transactionDate: movement.transactionDate.toISOString().slice(0, 10),
+        };
+      } catch (e) {
+        lastErr = e;
+        // Retry on serialisation conflict (Prisma P2034)
+        if (
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === 'P2034'
+        ) {
+          continue;
+        }
+        throw e;
+      }
+    }
+
+    // All retries exhausted — convert to 409 CONCURRENT_MODIFICATION
+    if (
+      lastErr instanceof Prisma.PrismaClientKnownRequestError &&
+      lastErr.code === 'P2034'
+    ) {
+      throw new BusinessException({
+        code: 'CONCURRENT_MODIFICATION',
+        message: 'Terjadi konflik stok bersamaan, silakan coba lagi',
+      });
+    }
+    throw lastErr;
   }
 
   private toItem(

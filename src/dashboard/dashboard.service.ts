@@ -7,6 +7,17 @@ import {
   EXPIRED_SOON_DAYS,
 } from '../medicines/medicines.helpers';
 
+/**
+ * Return a Date set to midnight UTC from an optional input date.
+ * Falls back to `new Date()` when no argument is supplied.
+ */
+export function toMidnightUtc(date?: Date): Date {
+  const d = date ?? new Date();
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+  );
+}
+
 export interface LowStockMedicine {
   id: string;
   code: string;

@@ -29,7 +29,7 @@ export class StockMovementReportQueryDto {
     enumName: 'StockMovementType',
   })
   @IsOptional()
-  @IsIn(Object.values(StockMovementType) as string[])
+  @IsIn(Object.values(StockMovementType))
   type?: StockMovementType;
 
   @ApiPropertyOptional({
@@ -37,7 +37,7 @@ export class StockMovementReportQueryDto {
     enumName: 'StockMovementReason',
   })
   @IsOptional()
-  @IsIn(Object.values(StockMovementReason) as string[])
+  @IsIn(Object.values(StockMovementReason))
   reason?: StockMovementReason;
 
   @ApiPropertyOptional({ example: '2026-01-01' })

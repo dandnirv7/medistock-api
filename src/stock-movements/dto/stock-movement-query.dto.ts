@@ -36,11 +36,11 @@ export class StockMovementQueryDto {
   supplierId?: string;
 
   @IsOptional()
-  @IsIn(Object.values(StockMovementType) as string[])
+  @IsIn(Object.values(StockMovementType))
   type?: StockMovementType;
 
   @IsOptional()
-  @IsIn(Object.values(StockMovementReason) as string[])
+  @IsIn(Object.values(StockMovementReason))
   reason?: StockMovementReason;
 
   @IsOptional()

@@ -22,7 +22,7 @@ export class StockOutDto {
   @Min(1)
   quantity!: number;
 
-  @IsIn(Object.values(StockMovementReason) as string[])
+  @IsIn(Object.values(StockMovementReason))
   reason!: StockMovementReason;
 
   @IsOptional()

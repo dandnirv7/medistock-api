@@ -103,7 +103,7 @@ describe('StockMovementsService', () => {
       });
       await expect(
         service.stockOut(
-          { medicineId: 'm1', quantity: 10, reason: 'SALE' } as never,
+          { medicineId: 'm1', quantity: 10, reason: 'SALE' },
           'u1',
         ),
       ).rejects.toMatchObject({

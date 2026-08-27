@@ -1,0 +1,3 @@
+# PostgreSQL service is commented out — the app now connects to
+# Supabase (cloud PostgreSQL) via DATABASE_URL / DIRECT_URL.
+# Keep this file as a reference for local-only development if needed.
